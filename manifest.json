@@ -1,9 +1,0 @@
-{
-  "name": "To-Do App",
-  "short_name": "To-Do",
-  "description": "A simple to-do app with reminders",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#67a9af"
-}
