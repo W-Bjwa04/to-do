@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="todo-container">
+        <h1>TO DO</h1>
+
+        <div class="search-box">
+            <label for="search">SEARCH</label>
+            <input type="text" id="search" placeholder="Enter your search term...">
+        </div>
+
+        <ul class="todo-list"></ul>
+
+        <div class="add-new">
+            <label for="new-todo">ADD NEW</label>
+            <input type="text" id="new-todo" placeholder="Add new task...">
+
+            <label for="task-date">Deadline Date</label>
+            <input type="date" id="task-date">
+            
+            <label for="task-time">Deadline Time</label>
+            <input type="time" id="task-time">
+
+            <button id="add-task">Add Task</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-analytics.js";
+        import { getMessaging } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-messaging.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyABHCV03KwPstvbD2Dr33FAMGb9UWTfKzM",
+            authDomain: "to-do-91e59.firebaseapp.com",
+            projectId: "to-do-91e59",
+            storageBucket: "to-do-91e59.appspot.com",
+            messagingSenderId: "182952564137",
+            appId: "1:182952564137:web:d5c940e22c10e8acb660b8",
+            measurementId: "G-98R2R8LKQS"
+        };
+      
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const messaging = getMessaging(app); // Initialize messaging
+    </script>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
