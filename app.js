@@ -1,18 +1,21 @@
-// Firebase configuration
+// Import Firebase modules
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-messaging.js";
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyABHCV03KwPstvbD2Dr33FAMGb9UWTfKzM",
+    authDomain: "to-do-91e59.firebaseapp.com",
+    projectId: "to-do-91e59",
+    storageBucket: "to-do-91e59.appspot.com",
+    messagingSenderId: "182952564137",
+    appId: "1:182952564137:web:d5c940e22c10e8acb660b8",
+    measurementId: "G-98R2R8LKQS"
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-
-// Get Firebase messaging instance
-const messaging = firebase.messaging();
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app); // Initialize messaging
 
 document.addEventListener("DOMContentLoaded", () => {
     const taskList = document.querySelector('.todo-list');
@@ -20,43 +23,52 @@ document.addEventListener("DOMContentLoaded", () => {
     const taskInput = document.querySelector('#new-todo');
     const taskDate = document.querySelector('#task-date');
     const taskTime = document.querySelector('#task-time');
+    const searchInput = document.querySelector('#search'); // Search input
 
-    // Request permission for push notifications
-    messaging.requestPermission()
-        .then(() => {
-            console.log('Notification permission granted.');
-            return messaging.getToken(); // Get the FCM token
-        })
-        .then((token) => {
-            console.log('FCM Token:', token);
-            // Save the token to your server or local storage for sending notifications
-        })
-        .catch((err) => {
-            console.error('Error getting notification permission:', err);
-        });
+    // Initialize tasks array
+    let tasks = readFromLocalStorage();
 
-    // Register the service worker for handling push notifications
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then((reg) => console.log('Service Worker registered', reg))
-                .catch((err) => console.error('Service Worker registration failed', err));
-        });
+    // Display tasks when the page loads
+    if (tasks.length > 0) {
+        displayTasks(tasks);
     }
 
-    // Read from local storage
-    const readFromLocalStorage = function() {
+    // Request permission for push notifications only on button click
+    addTaskBtn.addEventListener('click', () => {
+        requestNotificationPermission(); // Request notification permission
+        addTask(); // Proceed to add the task
+    });
+
+    // Function to request notification permission and get token
+    async function requestNotificationPermission() {
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                console.log('Notification permission granted.');
+                const token = await getToken(messaging, { vapidKey: 'BH-7QPgtFWA-2l7JqvZL32eT6YEQAYHFVp0U9CUBcuWD-K1kGZ95gz6TjeQGcrQPsVlY74B3kmQOqkJkpU7-M5c' }); // Replace with your VAPID key
+                console.log('FCM Token:', token);
+                // Save the token to your server or local storage for sending notifications
+            } else {
+                console.error('Unable to get permission to notify.');
+            }
+        } catch (err) {
+            console.error('Error getting notification permission:', err);
+        }
+    }
+
+    // Function to read from local storage
+    function readFromLocalStorage() {
         return JSON.parse(localStorage.getItem('tasks')) || [];
-    };
+    }
 
     // Function to store tasks in local storage
-    const addToLocalStorage = function(task) {
+    function addToLocalStorage(task) {
         tasks.push(task);
-        localStorage.setItem('tasks', JSON.stringify(tasks));  // Store tasks array in local storage
-    };
+        localStorage.setItem('tasks', JSON.stringify(tasks)); // Store tasks array in local storage
+    }
 
     // Function to display tasks in the task list
-    const displayTasks = function (tasks = []) {
+    function displayTasks(tasks = []) {
         taskList.innerHTML = tasks.map((t) => {
             return `
                 <li id="${t.id}">
@@ -66,14 +78,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 </li>
             `;
         }).join('');
-    };
-
-    // Load tasks from local storage
-    let tasks = readFromLocalStorage();
-
-    // Display tasks when the page loads
-    if (tasks.length > 0) {
-        displayTasks(tasks);
     }
 
     // Function to format date to "October 08, 2024"
@@ -116,10 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Add task to local storage and display
             addToLocalStorage(taskToAdd);
-
-            // Refresh the task list
             displayTasks(tasks);
-
             alert('Task Added Successfully');
 
             // Clear input fields
@@ -131,9 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    // Event listener for adding a task
-    addTaskBtn.addEventListener('click', addTask);
-
     // Use event delegation for task deleting (event bubbling)
     taskList.addEventListener('click', (event) => {
         if (event.target.classList.contains('delete-btn')) {
@@ -141,32 +139,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Filter the tasks array to remove the task with the matching ID
             tasks = tasks.filter(t => t.id !== taskIdToDelete);
-
-            // Update the tasks in local storage
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-
-            // Refresh the displayed task list
+            localStorage.setItem('tasks', JSON.stringify(tasks)); // Update tasks in local storage
             displayTasks(tasks);
-
             alert('Task Deleted Successfully');
         }
     });
 
-    // Check for upcoming deadlines every hour
+    // Search functionality
+    searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        const filteredTasks = tasks.filter(t => t.title.toLowerCase().includes(searchTerm));
+        displayTasks(filteredTasks);
+    });
+
+    // Check for upcoming deadlines every 2 hours
     setInterval(() => {
         const now = new Date();
         tasks.forEach(task => {
             const taskDeadline = new Date(`${task.deadlineDate} ${task.deadlineTime}`);
-            // Check if the task deadline is in the future
             if (taskDeadline > now) {
-                // Calculate the time difference in hours
                 const hoursUntilDeadline = (taskDeadline - now) / (1000 * 60 * 60);
-                if (hoursUntilDeadline <= 5) { // Notify if within 5 hours
+                if (hoursUntilDeadline <= 5) {
                     sendNotification(task.title, task.deadlineDate, task.deadlineTime);
                 }
             }
         });
-    }, 5 * 60 * 60 * 1000); // Check every 5 hours
+    }, 2 * 60 * 60 * 1000); // Check every 2 hours
 
     // Send notification function
     function sendNotification(title, deadlineDate, deadlineTime) {
@@ -174,7 +172,8 @@ document.addEventListener("DOMContentLoaded", () => {
             navigator.serviceWorker.ready.then(function (registration) {
                 registration.showNotification('Reminder', {
                     body: `Task: ${title} is due by ${deadlineDate} ${deadlineTime}`,
-                    icon: './icons/icon-192.png',
+                    // Remove the icon property if you don't have an icon
+                    // icon: './icons/icon-192.png',
                 });
             });
         }
