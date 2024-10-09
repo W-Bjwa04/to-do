@@ -1,10 +1,3 @@
-// Remove Firebase imports
-// import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-// import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-messaging.js";
-
-// Initialize your tasks array
-let tasks = readFromLocalStorage();
-
 // Wait for the DOM to load
 document.addEventListener("DOMContentLoaded", () => {
     const taskList = document.querySelector('.todo-list');
@@ -14,13 +7,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const taskTime = document.querySelector('#task-time');
     const searchInput = document.querySelector('#search'); // Search input
 
+    // Initialize your tasks array
+    let tasks = readFromLocalStorage();
+
     // Display tasks when the page loads
     if (tasks.length > 0) {
         displayTasks(tasks);
     }
-
-    // Add task functionality
-    addTaskBtn.addEventListener('click', addTask);
 
     // Function to read from local storage
     function readFromLocalStorage() {
@@ -68,35 +61,40 @@ document.addEventListener("DOMContentLoaded", () => {
         const taskDeadlineDate = taskDate.value;
         const taskDeadlineTime = taskTime.value;
 
-        if (taskContent && taskDeadlineDate && taskDeadlineTime) {
-            // Check if task already exists
-            const existingTask = tasks.find(t => t.title === taskContent);
-            if (existingTask) {
-                alert('Task Already Added');
-                return;
-            }
-
-            // Create task object
-            const taskToAdd = {
-                id: Date.now(),  // Use timestamp as a unique ID
-                title: taskContent,
-                deadlineDate: formatDate(taskDeadlineDate),
-                deadlineTime: formatTime(taskDeadlineTime)
-            };
-
-            // Add task to local storage and display
-            addToLocalStorage(taskToAdd);
-            displayTasks(tasks);
-            alert('Task Added Successfully');
-
-            // Clear input fields
-            taskInput.value = '';
-            taskDate.value = '';
-            taskTime.value = '';
-        } else {
+        // Check if inputs are empty
+        if (!taskContent || !taskDeadlineDate || !taskDeadlineTime) {
             alert('Please fill out all fields.');
+            return;
         }
+
+        // Check if task already exists
+        const existingTask = tasks.find(t => t.title === taskContent);
+        if (existingTask) {
+            alert('Task Already Added');
+            return;
+        }
+
+        // Create task object
+        const taskToAdd = {
+            id: Date.now(),  // Use timestamp as a unique ID
+            title: taskContent,
+            deadlineDate: formatDate(taskDeadlineDate),
+            deadlineTime: formatTime(taskDeadlineTime)
+        };
+
+        // Add task to local storage and display
+        addToLocalStorage(taskToAdd);
+        displayTasks(tasks);
+        alert('Task Added Successfully');
+
+        // Clear input fields
+        taskInput.value = '';
+        taskDate.value = '';
+        taskTime.value = '';
     };
+
+    // Add event listener for adding tasks after addTask is declared
+    addTaskBtn.addEventListener('click', addTask);
 
     // Use event delegation for task deleting (event bubbling)
     taskList.addEventListener('click', (event) => {
